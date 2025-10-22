@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales & Payment History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .details-row { display: none; background-color: #f8fafc; }
+        .details-row.visible { display: table-row; }
+        .modal-overlay { transition: opacity 0.3s ease; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="container mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Sales & Payment History</h1>
+            <a href="/" class="text-blue-500 hover:underline">Back to Billing</a>
+        </div>
+
+        <!-- Search and Summary -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 flex justify-between items-center">
+            <div>
+                <label for="search-input" class="block text-sm font-medium text-gray-700">Search by Invoice # or Customer Name</label>
+                <input type="text" id="search-input" class="mt-1 block w-full md:w-80 border-gray-300 rounded-md shadow-sm p-2" placeholder="Search...">
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Total Sales</p>
+                <p id="total-sales-amount" class="text-2xl font-bold text-gray-800">₹ 0.00</p>
+                <p class="text-sm text-gray-500">Total Balance Due</p>
+                <p id="total-balance-due" class="text-xl font-bold text-red-500">₹ 0.00</p>
+            </div>
+        </div>
+
+        <!-- Sales Log Table -->
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">All Transactions</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b-2 border-gray-300">
+                        <tr>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500">Invoice #</th>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500">Date</th>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500">Customer</th>
+                            <th class="py-2 text-right text-xs font-semibold text-gray-500">Total</th>
+                            <th class="py-2 text-center text-xs font-semibold text-gray-500">Payment</th>
+                            <th class="py-2 text-right text-xs font-semibold text-gray-500">Balance Due</th>
+                            <th class="py-2 text-center text-xs font-semibold text-gray-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-history-body" class="divide-y">
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+                <p id="no-sales-message" class="text-center text-gray-500 py-16 hidden">No sales records found.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPDATE PAYMENT MODAL (Hidden by default) -->
+    <div id="payment-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Update Payment</h2>
+            <form id="payment-form">
+                <input type="hidden" id="modal-sale-id">
+                <div class="mb-4">
+                    <p>Invoice: <span id="modal-invoice-no" class="font-semibold"></span></p>
+                    <p>Current Due: <span id="modal-current-due" class="font-semibold text-red-500"></span></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="modal-amount-paid" class="block text-sm font-medium text-gray-700">Amount to Pay (₹)</label>
+                        <input type="number" id="modal-amount-paid" step="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                    </div>
+                    <div>
+                        <label for="modal-payment-method" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select id="modal-payment-method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-white">
+                            <option>Cash</option>
+                            <option>Card</option>
+                            <option>UPI</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" id="modal-cancel-btn" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Save Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='sales_history.js') }}"></script>
+</body>
+</html>
