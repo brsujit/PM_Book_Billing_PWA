@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Book Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .modal { transition: opacity 0.3s ease; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="container mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Book Inventory Management</h1>
+            <div>
+                <button id="import-csv-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition">
+                    Import from CSV
+                </button>
+                <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+                <a href="/" class="text-blue-500 hover:underline ml-4">Back to Billing</a>
+            </div>
+        </div>
+
+        <!-- Add/Edit Form -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+            <h2 id="form-title" class="text-2xl font-bold text-gray-800 mb-4">Add New Book</h2>
+            <form id="book-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <input type="hidden" id="book-id-hidden">
+                <div class="md:col-span-1">
+                    <label for="book-code" class="block text-sm font-medium text-gray-700">Book Code (ID)</label>
+                    <input type="number" id="book-code" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="book-title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="book-title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="book-author" class="block text-sm font-medium text-gray-700">Author</label>
+                    <input type="text" id="book-author" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="book-price" class="block text-sm font-medium text-gray-700">Price (₹)</label>
+                    <input type="number" step="0.01" id="book-price" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div class="md:col-span-1">
+                    <label for="book-stock" class="block text-sm font-medium text-gray-700">Stock</label>
+                    <input type="number" id="book-stock" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" required>
+                </div>
+                <div class="md:col-span-3 flex gap-4">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition">Save Book</button>
+                    <button type="button" id="clear-form-btn" class="w-full bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400 transition">Clear</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Current Inventory</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b-2 border-gray-300">
+                        <tr>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500 w-12">Code</th>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500">Title</th>
+                            <th class="py-2 text-left text-xs font-semibold text-gray-500">Author</th>
+                            <th class="py-2 text-right text-xs font-semibold text-gray-500 w-24">Price</th>
+                            <th class="py-2 text-center text-xs font-semibold text-gray-500 w-20">Stock</th>
+                            <th class="py-2 text-center text-xs font-semibold text-gray-500 w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body" class="divide-y">
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='manage_db.js') }}"></script>
+</body>
+</html>
+
