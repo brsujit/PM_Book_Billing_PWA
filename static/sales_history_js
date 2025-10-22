@@ -1,0 +1,165 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM ELEMENTS ---
+    const searchInput = document.getElementById('search-input');
+    const salesHistoryBody = document.getElementById('sales-history-body');
+    const noSalesMessage = document.getElementById('no-sales-message');
+    const totalSalesAmountEl = document.getElementById('total-sales-amount');
+    const totalBalanceDueEl = document.getElementById('total-balance-due');
+    
+    // Modal Elements
+    const paymentModal = document.getElementById('payment-modal');
+    const paymentForm = document.getElementById('payment-form');
+    const modalSaleId = document.getElementById('modal-sale-id');
+    const modalInvoiceNo = document.getElementById('modal-invoice-no');
+    const modalCurrentDue = document.getElementById('modal-current-due');
+    const modalAmountPaid = document.getElementById('modal-amount-paid');
+    const modalPaymentMethod = document.getElementById('modal-payment-method');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+
+    let allSales = []; // To store the full list of sales for filtering
+
+    // --- INITIAL DATA FETCH ---
+    fetchSalesHistory();
+
+    // --- EVENT LISTENERS ---
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        filterAndRenderSales(searchTerm);
+    });
+
+    salesHistoryBody.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.classList.contains('details-toggle-btn')) {
+            const saleId = target.dataset.id;
+            const detailsRow = document.getElementById(`details-${saleId}`);
+            if (detailsRow) detailsRow.classList.toggle('visible');
+        } else if (target.classList.contains('update-payment-btn')) {
+            const saleId = target.dataset.id;
+            openPaymentModal(saleId);
+        }
+    });
+
+    // Modal Listeners
+    modalCancelBtn.addEventListener('click', () => paymentModal.classList.add('hidden'));
+
+    paymentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saleId = modalSaleId.value;
+        const amountPaid = parseFloat(modalAmountPaid.value);
+        const paymentMethod = modalPaymentMethod.value;
+
+        if (isNaN(amountPaid) || amountPaid <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/sale/${saleId}/payment`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount_paid: amountPaid, payment_method: paymentMethod })
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (response.ok) {
+                paymentModal.classList.add('hidden');
+                fetchSalesHistory(); // Refresh the data
+            }
+        } catch (error) {
+            console.error('Error updating payment:', error);
+            alert('An error occurred while updating the payment.');
+        }
+    });
+
+
+    // --- FUNCTIONS ---
+    async function fetchSalesHistory() {
+        try {
+            const response = await fetch('/api/sales');
+            if (!response.ok) throw new Error('Failed to fetch sales history');
+            allSales = await response.json();
+            renderSales(allSales);
+            calculateTotals(allSales);
+        } catch (error) {
+            console.error('Error fetching sales history:', error);
+            noSalesMessage.classList.remove('hidden');
+        }
+    }
+
+    function filterAndRenderSales(searchTerm) {
+        const filteredSales = allSales.filter(sale => 
+            sale.invoice_no.toLowerCase().includes(searchTerm) || 
+            sale.customer_name.toLowerCase().includes(searchTerm)
+        );
+        renderSales(filteredSales);
+    }
+
+    function renderSales(sales) {
+        salesHistoryBody.innerHTML = ''; 
+        if (sales.length === 0) {
+            noSalesMessage.classList.remove('hidden');
+            return;
+        }
+        noSalesMessage.classList.add('hidden');
+
+        sales.forEach(sale => {
+            const row = document.createElement('tr');
+            const balanceDue = sale.balance_due || 0;
+            const isDue = balanceDue > 0.01;
+            
+            // The action button changes based on whether there's a balance due
+            const actionButton = isDue 
+                ? `<button class="update-payment-btn text-green-600 hover:underline text-xs font-semibold" data-id="${sale.id}">Update</button>`
+                : `<span class="text-xs text-gray-400">Paid</span>`;
+
+            row.innerHTML = `
+                <td class="py-3 text-sm font-semibold text-gray-800">${sale.invoice_no}</td>
+                <td class="py-3 text-sm text-gray-600">${new Date(sale.sale_date).toLocaleDateString('en-GB')}</td>
+                <td class="py-3 text-sm text-gray-600">${sale.customer_name}</td>
+                <td class="py-3 text-sm text-right font-semibold text-gray-800">₹${sale.grand_total.toFixed(2)}</td>
+                <td class="py-3 text-sm text-center text-gray-600">${sale.payment_method}</td>
+                <td class="py-3 text-sm text-right font-bold ${isDue ? 'text-red-500' : 'text-green-600'}">₹${balanceDue.toFixed(2)}</td>
+                <td class="py-3 text-center space-x-2">
+                    <button class="details-toggle-btn text-blue-500 hover:underline text-xs" data-id="${sale.id}">View</button>
+                    ${actionButton}
+                </td>
+            `;
+
+            const detailsRow = document.createElement('tr');
+            detailsRow.id = `details-${sale.id}`;
+            detailsRow.classList.add('details-row');
+            
+            let itemsHtml = '<ul class="list-disc pl-5 text-xs">';
+            sale.items.forEach(item => {
+                itemsHtml += `<li>${item.book_title} (Qty: ${item.quantity} @ ₹${item.price_per_unit.toFixed(2)})</li>`;
+            });
+            itemsHtml += '</ul>';
+
+            detailsRow.innerHTML = `<td colspan="7" class="p-4">${itemsHtml}</td>`;
+
+            salesHistoryBody.appendChild(row);
+            salesHistoryBody.appendChild(detailsRow);
+        });
+    }
+
+    function calculateTotals(sales) {
+        const totalSales = sales.reduce((sum, sale) => sum + sale.grand_total, 0);
+        const totalDue = sales.reduce((sum, sale) => sum + (sale.balance_due || 0), 0);
+        totalSalesAmountEl.textContent = `₹ ${totalSales.toFixed(2)}`;
+        totalBalanceDueEl.textContent = `₹ ${totalDue.toFixed(2)}`;
+    }
+
+    function openPaymentModal(saleId) {
+        const sale = allSales.find(s => s.id == saleId);
+        if (!sale) return;
+
+        modalSaleId.value = sale.id;
+        modalInvoiceNo.textContent = sale.invoice_no;
+        modalCurrentDue.textContent = `₹ ${sale.balance_due.toFixed(2)}`;
+        modalAmountPaid.value = sale.balance_due.toFixed(2); // Pre-fill with the due amount
+        modalPaymentMethod.value = 'Cash'; // Default to cash
+        paymentModal.classList.remove('hidden');
+        modalAmountPaid.focus();
+    }
+});
