@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prajnana Mission - Book Sale Bill Book</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        @media print {
+            body { background-color: #fff; padding: 0; margin: 0; }
+            #control-panel, #main-header, .action-buttons-container, #payment-section { display: none; }
+            #invoice-wrapper { width: 100%; max-width: 100%; box-shadow: none; border: none; margin: 0; padding: 0; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <header id="main-header" class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Prajnana Mission Book Sell Bill Book.</h1>
+    </header>
+    <div class="container mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <!-- Left Panel: Controls -->
+        <div id="control-panel" class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg h-fit">
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Add Book Details</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-1">
+                            <label for="book-code" class="block text-sm font-medium text-gray-700">Book Code</label>
+                            <input type="text" id="book-code" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50" readonly>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="book-title-dropdown" class="block text-sm font-medium text-gray-700">Book Title</label>
+                            <select id="book-title-dropdown" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"></select>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="book-author-dropdown" class="block text-sm font-medium text-gray-700">Author / ISBN</label>
+                        <select id="book-author-dropdown" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"></select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="book-qty" class="block text-sm font-medium text-gray-700">Qty</label>
+                            <input type="number" id="book-qty" value="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="book-price" class="block text-sm font-medium text-gray-700">Unit Price (₹)</label>
+                            <input type="number" id="book-price" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50" readonly>
+                        </div>
+                        <div>
+                            <label for="book-discount" class="block text-sm font-medium text-gray-700">Discount (%)</label>
+                            <input type="number" id="book-discount" value="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Bill Options (Global)</h2>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="tax-rate" class="block text-sm font-medium text-gray-700">GST (%)</label>
+                        <input type="number" id="tax-rate" value="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="global-discount" class="block text-sm font-medium text-gray-700">Global Discount (%)</label>
+                        <input type="number" id="global-discount" value="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                </div>
+                <div>
+                    <label for="customer-name" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                    <input type="text" id="customer-name" list="customer-list" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" placeholder="Type or select a customer...">
+                    <datalist id="customer-list"></datalist>
+                </div>
+                <div class="mt-4">
+                    <label for="phone-number-input" class="block text-sm font-medium text-gray-700">WhatsApp Number</label>
+                    <div class="flex mt-1">
+                        <input type="text" id="country-code" value="+91" class="w-1/4 border-gray-300 rounded-l-md shadow-sm p-2 bg-gray-100 text-center">
+                        <input type="tel" id="phone-number-input" class="w-3/4 border-gray-300 rounded-r-md shadow-sm p-2" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="customer-address" class="block text-sm font-medium text-gray-700">Address</label>
+                    <textarea id="customer-address" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2" placeholder="Optional"></textarea>
+                </div>
+            </div>
+            <div id="payment-section" class="mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Payment Management</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="payment-method" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select id="payment-method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-white">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Due">Due / Credit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="amount-paid" class="block text-sm font-medium text-gray-700">Amount Paid (₹)</label>
+                        <input type="number" id="amount-paid" value="0.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg border flex justify-between items-center">
+                    <span class="font-semibold text-gray-700">Balance Due / Change:</span>
+                    <span id="balance-due-display" class="text-lg text-red-500">₹ 0.00</span>
+                </div>
+            </div>
+            <button id="add-item-btn" class="mt-8 w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Add Item to Bill</button>
+            <div class="action-buttons-container mt-4 space-y-3">
+                <button id="update-btn" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Update Bill</button>
+                <div class="relative" id="pss-container">
+                    <button id="pss-button" class="w-full bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 flex items-center justify-center gap-2">
+                        Print / Save / Send <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                    <div id="pss-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                        <a href="#" id="print-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Print / Save as PDF</a>
+                        <a href="#" id="whatsapp-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Send via WhatsApp</a>
+                        <a href="#" id="export-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Export Sales Log</a>
+                    </div>
+                </div>
+                <button id="clear-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600">Clear Bill</button>
+                <a href="/history" class="block w-full bg-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-600 text-center">View Sales History</a>
+                <a href="/manage" class="block w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-600 text-center">Manage Inventory</a>
+            </div>
+        </div>
+        <div id="invoice-wrapper" class="lg:col-span-3">
+             <!-- Invoice content will be dynamically generated -->
+        </div>
+    </div>
+    <div id="toast" class="toast fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0"></div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
